@@ -1,0 +1,95 @@
+<!-- File: public/index.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vision Chat App</title>
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .message-input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #chat-history {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+        }
+
+        .bot-message {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div id="chat-history"></div>
+        <input type="file" id="image-input" accept="image/*">
+        <textarea class="message-input" id="message-input" rows="3" placeholder="Type your message..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const imageInput = document.getElementById('image-input');
+            const chatHistory = document.getElementById('chat-history');
+
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            appendMessage('user', message);
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('message', message);
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                appendMessage('bot', data.response);
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('bot', 'Sorry, there was an error processing your request.');
+            }
+        }
+
+        function appendMessage(sender, content) {
+            const chatHistory = document.getElementById('chat-history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = content;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
